@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  #hotel-ai-core:
+  #  build: ./hotel-ai-core
+  #  ports:
+  #    - "8000:8000"
+  #  # add core env vars here (DB/Redis/Secrets) if needed
+
+  hotel-admin-web:
+    build: ./hotel-admin-web
+    environment:
+      - CORE_API_BASE_URL=http://localhost:8000
+      - CORE_LOGIN_PATH=/admin/login
+      - AUTH_COOKIE_NAME=hotel_admin_access
+      - APP_ORIGIN=http://localhost:3001
+    ports:
+      - "3001:3000"
+    #depends_on:
+    #  - hotel-ai-core

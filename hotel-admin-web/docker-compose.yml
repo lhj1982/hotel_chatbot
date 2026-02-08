@@ -1,0 +1,18 @@
+version: '3.9'
+services:
+  hotel-admin-web:
+    build: .
+    environment:
+      - CORE_API_BASE_URL=${CORE_API_BASE_URL:-http://api:8000}
+      - CORE_LOGIN_PATH=${CORE_LOGIN_PATH:-/admin/login}
+      - AUTH_COOKIE_NAME=${AUTH_COOKIE_NAME:-hotel_admin_access}
+      - APP_ORIGIN=${APP_ORIGIN:-http://localhost:3001}
+    ports:
+      - "3001:3000"
+    networks:
+      - hotel-public
+
+networks:
+  hotel-public:
+    external: true
+    name: hotel-public
