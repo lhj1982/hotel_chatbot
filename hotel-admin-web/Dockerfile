@@ -1,13 +1,21 @@
 # ---- build stage ----
-FROM node:20-alpine AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
+
+# Copy package files
 COPY package.json package-lock.json* ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm i; fi
+
+# Delete lock file and install fresh (npm is crashing with existing lock)
+RUN rm -f package-lock.json && npm install --no-audit
+
+# Copy source code
 COPY . .
+
+# Build the application
 RUN npm run build
 
 # ---- run stage ----
-FROM node:20-alpine AS runner
+FROM node:22-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 

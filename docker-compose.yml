@@ -1,19 +1,158 @@
 version: "3.9"
-services:
-  #hotel-ai-core:
-  #  build: ./hotel-ai-core
-  #  ports:
-  #    - "8000:8000"
-  #  # add core env vars here (DB/Redis/Secrets) if needed
 
-  hotel-admin-web:
+services:
+  # ===========================
+  # Backend Core Services
+  # ===========================
+
+  api:
+    build: ./hotel-ai-core
+    ports:
+      - "8000:8000"  # Exposed for local development access
+    env_file: ./hotel-ai-core/.env
+    volumes:
+      - ./hotel-ai-core:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - internal       # Can access db, redis, minio, worker
+      - hotel-public   # Exposed to frontend and admin-web
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  worker:
+    build: ./hotel-ai-core
+    env_file: ./hotel-ai-core/.env
+    volumes:
+      - ./hotel-ai-core:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - internal  # Only on internal network - no public access needed
+    command: celery -A app.workers.celery_app worker --loglevel=info
+
+  # ===========================
+  # Infrastructure (Internal Only)
+  # ===========================
+
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: hotel_ai
+      POSTGRES_PASSWORD: hotel_ai_pass
+      POSTGRES_DB: hotel_ai
+    ports:
+      - "5432:5432"  # For local dev tools only (psql, pgAdmin)
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal  # Internal only - never exposed to public network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hotel_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"  # For local dev tools only (redis-cli)
+    volumes:
+      - redisdata:/data
+    networks:
+      - internal  # Internal only - never exposed to public network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"  # S3 API - for local dev tools
+      - "9001:9001"  # Console - for local dev tools
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - miniodata:/data
+    networks:
+      - internal  # Internal only - never exposed to public network
+    command: server /data --console-address ":9001"
+
+  minio-init:
+    image: minio/mc
+    depends_on:
+      - minio
+    networks:
+      - internal
+    entrypoint: >
+      /bin/sh -c "
+      sleep 3;
+      mc alias set local http://minio:9000 minioadmin minioadmin;
+      mc mb local/hotel-ai-kb --ignore-existing;
+      exit 0;
+      "
+
+  # ===========================
+  # Admin Backoffice Web
+  # ===========================
+
+  admin-web:
     build: ./hotel-admin-web
     environment:
-      - CORE_API_BASE_URL=http://localhost:8000
+      - CORE_API_BASE_URL=http://api:8000  # Uses Docker internal DNS
       - CORE_LOGIN_PATH=/admin/login
       - AUTH_COOKIE_NAME=hotel_admin_access
       - APP_ORIGIN=http://localhost:3001
     ports:
-      - "3001:3000"
-    #depends_on:
-    #  - hotel-ai-core
+      - "3001:3000"  # Public access for admin users
+    depends_on:
+      - api
+    networks:
+      - hotel-public  # Only on public network - can reach api, but NOT db/redis/minio
+    restart: unless-stopped
+
+  # ===========================
+  # Frontend Chatbot Widget (Placeholder)
+  # ===========================
+  # Uncomment when you create the hotel-frontend directory
+  #
+  # frontend-widget:
+  #   build: ./hotel-frontend
+  #   environment:
+  #     - CORE_API_BASE_URL=http://api:8000
+  #   ports:
+  #     - "3000:3000"  # Public access for end users
+  #   depends_on:
+  #     - api
+  #   networks:
+  #     - hotel-public  # Only on public network
+  #   restart: unless-stopped
+
+networks:
+  # Internal network - for core infrastructure only
+  # db, redis, minio, worker are ONLY on this network
+  internal:
+    driver: bridge
+    internal: false  # Set to true in production to prevent any external access
+
+  # Public network - for services that need to communicate with API
+  # api (bridge), admin-web, and frontend-widget are on this network
+  hotel-public:
+    driver: bridge
+    name: hotel-public
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+  miniodata:
+    driver: local

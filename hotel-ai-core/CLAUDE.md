@@ -8,7 +8,7 @@ This is the **backend** service (`hotel-ai-core`). It is part of a multi-repo ar
 |------|------|---------|
 | `hotel-ai-core` | Backend API + worker + infrastructure | Internal only (api bridges to public) |
 | `hotel-frontend` | Guest-facing chat widget / standalone page | Public |
-| `hotel-backoffice` | Admin dashboard for hotel staff | Public |
+| `hotel-admin-web` | Admin dashboard for hotel staff | Public |
 
 Frontend and backoffice communicate with the core API over the `hotel-public` Docker network. Infrastructure services (db, redis, minio) are isolated on the `internal` network and are never directly accessible from frontend or backoffice.
 
