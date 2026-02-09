@@ -29,6 +29,9 @@ help:
 	@echo "  make db-connect      - Connect to PostgreSQL database"
 	@echo "  make db-migrate      - Run database migrations"
 	@echo "  make db-migrate-create MSG='description' - Create new migration"
+	@echo "  make db-seed         - Seed database with test admin user"
+	@echo "  make db-seed-kb      - Seed knowledge base with sample data"
+	@echo "  make db-seed-all     - Run migrations + seed all data"
 	@echo ""
 	@echo "Cleanup Commands:"
 	@echo "  make clean           - Stop services and remove containers"
@@ -125,6 +128,21 @@ db-migrate-create:
 
 db-rollback:
 	docker compose exec api alembic downgrade -1
+
+db-seed:
+	@echo "Seeding database with test data..."
+	docker compose exec -T db psql -U hotel_ai -d hotel_ai < hotel-ai-core/scripts/seed_admin.sql
+
+db-seed-kb:
+	@echo "Seeding knowledge base with sample data..."
+	docker compose exec -T db psql -U hotel_ai -d hotel_ai < hotel-ai-core/scripts/seed_kb_sample.sql
+
+db-seed-all:
+	@echo "Running migrations and seeding database..."
+	docker compose exec api alembic upgrade head
+	docker compose exec -T db psql -U hotel_ai -d hotel_ai < hotel-ai-core/scripts/seed_admin.sql
+	docker compose exec -T db psql -U hotel_ai -d hotel_ai < hotel-ai-core/scripts/seed_kb_sample.sql
+	@echo "✓ Complete!"
 
 db-reset:
 	@echo "WARNING: This will delete all data!"
@@ -225,11 +243,16 @@ setup:
 	sleep 10
 	@echo "\nRunning database migrations..."
 	docker compose exec api alembic upgrade head || echo "⚠️  Migrations failed - you may need to run manually"
+	@echo "\nSeeding database with test data..."
+	docker compose exec -T db psql -U hotel_ai -d hotel_ai < hotel-ai-core/scripts/seed_admin.sql || echo "⚠️  Seeding failed - you may need to run manually"
 	@echo "\n✓ Setup complete!"
 	@echo "\nServices:"
 	@echo "  - API:           http://localhost:8000/docs"
 	@echo "  - Admin Web:     http://localhost:3001"
 	@echo "  - MinIO Console: http://localhost:9001 (minioadmin/minioadmin)"
+	@echo "\nTest Admin Login:"
+	@echo "  - Email:    test@test.com"
+	@echo "  - Password: test"
 	@echo "\nRun 'make logs' to see service logs"
 
 # ============================================================================
