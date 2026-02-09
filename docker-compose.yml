@@ -120,21 +120,18 @@ services:
     restart: unless-stopped
 
   # ===========================
-  # Frontend Chatbot Widget (Placeholder)
+  # Frontend Chatbot Widget
   # ===========================
-  # Uncomment when you create the hotel-frontend directory
-  #
-  # frontend-widget:
-  #   build: ./hotel-frontend
-  #   environment:
-  #     - CORE_API_BASE_URL=http://api:8000
-  #   ports:
-  #     - "3000:3000"  # Public access for end users
-  #   depends_on:
-  #     - api
-  #   networks:
-  #     - hotel-public  # Only on public network
-  #   restart: unless-stopped
+
+  frontend-widget:
+    build: ./hotel-frontend
+    ports:
+      - "3000:3000"  # Public access for end users
+    depends_on:
+      - api
+    networks:
+      - hotel-public  # Only on public network
+    restart: unless-stopped
 
 networks:
   # Internal network - for core infrastructure only

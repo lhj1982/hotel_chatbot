@@ -117,7 +117,6 @@ async def conversation_start(
 
 
 @router.post("/chat", response_model=ChatResponse)
-@limiter.limit("30/minute")
 async def chat(
     body: ChatRequest,
     request: Request,
@@ -167,6 +166,7 @@ async def chat(
         role="assistant",
         content=rag_result.get("answer_text"),
     )
+    print(assistant_msg.content)
     db.add(assistant_msg)
     await db.flush()
 

@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     # RAG
     RAG_TOP_K: int = 8
-    RAG_CONFIDENCE_THRESHOLD: float = 0.65
+    RAG_CONFIDENCE_THRESHOLD: float = 0.30
 
     # S3 / MinIO
     S3_ENDPOINT_URL: str = "http://minio:9000"

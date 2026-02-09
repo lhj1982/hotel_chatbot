@@ -27,7 +27,9 @@ async def rag_answer(
 
     # 3. Check confidence
     max_similarity = max((c["similarity"] for c in chunks), default=0.0)
-
+    print(f"Max similarity: {max_similarity}")
+    print(f"Chunks retrieved: {len(chunks)}")
+    print(settings.RAG_CONFIDENCE_THRESHOLD)
     if max_similarity < settings.RAG_CONFIDENCE_THRESHOLD or not chunks:
         return {
             "outcome": "fallback",

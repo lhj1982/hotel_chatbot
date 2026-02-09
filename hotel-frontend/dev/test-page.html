@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Website (Test Page)</title>
+  <style>
+    body {
+      font-family: Georgia, serif;
+      margin: 0;
+      background: #faf9f6;
+      color: #333;
+    }
+    header {
+      background: #1a365d;
+      color: #fff;
+      padding: 24px 40px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 400;
+    }
+    main {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    h2 { color: #1a365d; }
+    p { line-height: 1.7; color: #555; }
+    .hero {
+      background: #e8e0d4;
+      padding: 60px 40px;
+      text-align: center;
+      border-radius: 8px;
+      margin-bottom: 32px;
+    }
+    .hero h2 { font-size: 28px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>The Grand Hotel</h1>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h2>Welcome to The Grand Hotel</h2>
+      <p>Experience luxury and comfort in the heart of the city.</p>
+    </div>
+
+    <h2>About Us</h2>
+    <p>
+      The Grand Hotel offers world-class amenities, fine dining, and exceptional
+      service. Our concierge team is available 24/7 to assist with your every need.
+    </p>
+
+    <h2>Getting Help</h2>
+    <p>
+      Click the chat bubble in the bottom-right corner to ask our AI assistant
+      about rooms, dining, spa services, and more.
+    </p>
+  </main>
+
+  <!--
+    Chat Widget Embed
+    Replace data-key with your actual widget key from the admin dashboard.
+    data-api-url should point to your hotel-ai-core API.
+  -->
+  <script
+    src="http://localhost:3000/widget.js"
+    data-key="REPLACE_WITH_YOUR_WIDGET_KEY"
+    data-api-url="http://localhost:8000"
+  ></script>
+</body>
+</html>

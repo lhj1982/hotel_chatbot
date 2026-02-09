@@ -73,7 +73,8 @@ export default function SettingsPage() {
   }
 
   function copySnippet(key: string) {
-    const snippet = `<script src="https://your-cdn.com/widget.js" data-key="${key}"></script>`;
+    const baseUrl = process.env.NEXT_PUBLIC_WIDGET_SCRIPT_URL || "http://localhost:3000";
+    const snippet = `<script src="${baseUrl}/widget.js" data-key="${key}"></script>`;
     navigator.clipboard.writeText(snippet);
     setCopied(key);
     setTimeout(() => setCopied(null), 2000);
