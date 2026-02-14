@@ -156,17 +156,24 @@ Verify in Neon SQL Editor: `SELECT * FROM users;` should show your test user.
 
 ## Step 5: Deploy Backend to Railway
 
+This is a monorepo — Railway deploys from a subfolder of your GitHub repo.
+
 1. Go to https://railway.app → **Sign Up** (GitHub recommended)
 2. Click **New Project** → **Deploy from GitHub repo** → select your repo
 
 ### API Service
 
 3. Click the service → **Settings**:
-   - **Root Directory**: `hotel-ai-core`
-   - **Builder**: Dockerfile
-   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}`
+   - **Root Directory**: `hotel-ai-core` (under **Source** section — if you can't find it, see troubleshooting below)
+   - **Builder**: Dockerfile (auto-detected)
+   - **Custom Start Command** (under **Deploy** section):
+     ```
+     sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+     ```
+     > **Important:** You must wrap the command in `sh -c "..."` — Railway's Docker runner does not expand shell variables like `${PORT}` directly.
+   - **Healthcheck Path** (optional, under **Deploy** section): `/health`
 
-4. Go to **Variables** → **Raw Editor** → paste:
+4. Go to **Variables** → **Raw Editor** → paste all env vars from `.env.vercel` (or add them one by one):
    ```
    DATABASE_URL=postgresql+asyncpg://USER:PASS@ep-xxx.neon.tech/neondb?sslmode=require
    DATABASE_URL_SYNC=postgresql://USER:PASS@ep-xxx.neon.tech/neondb?sslmode=require
@@ -188,6 +195,7 @@ Verify in Neon SQL Editor: `SELECT * FROM users;` should show your test user.
    LOG_LEVEL=INFO
    CORS_ORIGINS=["http://localhost:3000"]
    ```
+   > **Important:** `DATABASE_URL` must use `postgresql+asyncpg://` (not `postgresql://`). `DATABASE_URL_SYNC` uses `postgresql://`. Getting this wrong causes `InvalidRequestError: The asyncio extension requires an async driver`.
 
 5. Go to **Networking** → **Generate Domain** → copy URL (e.g., `hotel-ai-core-xxx.up.railway.app`)
 
@@ -196,9 +204,9 @@ Verify in Neon SQL Editor: `SELECT * FROM users;` should show your test user.
 6. In the same project: **+ New** → **GitHub Repo** → same repo
 7. **Settings**:
    - Root Directory: `hotel-ai-core`
-   - Start Command: `celery -A app.workers.celery_app worker --loglevel=info --concurrency=2`
+   - Custom Start Command: `sh -c "celery -A app.workers.celery_app worker --loglevel=info --concurrency=2"`
 8. **Variables**: Same as API service
-9. **Networking**: No public domain needed
+9. **Networking**: No public domain needed (worker is internal)
 
 ### Verify
 
@@ -277,14 +285,31 @@ Now that you have all the Vercel URLs, update Railway env vars:
 
 ## Troubleshooting
 
+### Alembic / Migrations
+
 | Issue | Cause | Fix |
 |-------|-------|-----|
-| Alembic hangs | Using pooler URL or `channel_binding=require` | Use non-pooler URL, remove channel_binding |
-| Alembic hangs | `.env` overrides shell env var | Pass `DATABASE_URL_SYNC=...` as prefix to command |
+| Alembic hangs | Using pooler URL (hostname has `-pooler`) | Use non-pooler URL from Neon dashboard |
+| Alembic hangs | `channel_binding=require` in URL | Remove `channel_binding=require` from URL |
+| Alembic hangs | `.env` file overrides shell env var | Pass `DATABASE_URL_SYNC=...` as prefix to the alembic command |
 | `ModuleNotFoundError: pgvector` | Not in active virtualenv | Activate venv, `pip install -r requirements.txt` |
+
+### Railway
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| `Script start.sh not found` | Root Directory not set to `hotel-ai-core` | Set Root Directory in service Settings → Source |
+| `'${PORT:-8000}' is not a valid integer` | Shell variable not expanded | Wrap command in `sh -c "..."` |
+| `asyncio extension requires an async driver` | `DATABASE_URL` uses `postgresql://` | Change to `postgresql+asyncpg://` |
+| Health check fails (service unavailable) | App crashing or wrong port | Check deploy logs; ensure start command uses `sh -c` wrapper |
+
+### Vercel / Frontends
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
 | 401 on admin login | Wrong `CORE_API_BASE_URL` | Check Railway URL in Vercel env vars |
 | CORS errors in browser | Vercel URLs not in CORS_ORIGINS | Update Railway env var with actual Vercel URLs |
-| Widget can't reach API | Missing `data-api-url` | Widget infers from script src; add `data-api-url` pointing to Railway |
+| Widget can't reach API | Missing `data-api-url` | Add `data-api-url` attribute pointing to Railway URL |
 | Celery SSL error with Upstash | Needs TLS config | URL should start with `rediss://` (double s) |
 
 ---
