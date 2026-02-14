@@ -26,11 +26,12 @@ class Settings(BaseSettings):
     RAG_TOP_K: int = 8
     RAG_CONFIDENCE_THRESHOLD: float = 0.30
 
-    # S3 / MinIO
+    # S3 / MinIO (leave S3_ENDPOINT_URL empty for real AWS S3)
     S3_ENDPOINT_URL: str = "http://minio:9000"
     S3_ACCESS_KEY: str = "minioadmin"
     S3_SECRET_KEY: str = "minioadmin"
     S3_BUCKET_NAME: str = "hotel-ai-kb"
+    S3_REGION: str = "us-east-1"
 
     # App
     APP_ENV: str = "development"

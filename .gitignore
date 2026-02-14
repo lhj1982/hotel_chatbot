@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+.env.vercel
 
 # Docker volumes data (if using local bind mounts)
 postgres-data/
