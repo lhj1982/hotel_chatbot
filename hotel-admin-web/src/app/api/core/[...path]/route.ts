@@ -4,16 +4,17 @@ import { cookies } from 'next/headers';
 const CORE_API_BASE_URL = process.env.CORE_API_BASE_URL || 'http://localhost:8000';
 const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME || 'hotel_admin_access';
 
-async function forward(req: Request, { params }: { params: { path: string[] } }) {
-  const cookieStore = cookies();
+async function forward(req: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  const cookieStore = await cookies();
   const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
   if (!token) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
   const url = new URL(req.url);
-  const path = params.path.join('/');
-  const target = new URL(`${CORE_API_BASE_URL}/${path}`);
+  const { path } = await params;
+  const pathStr = path.join('/');
+  const target = new URL(`${CORE_API_BASE_URL}/${pathStr}`);
   // forward query params
   url.searchParams.forEach((v, k) => target.searchParams.append(k, v));
 

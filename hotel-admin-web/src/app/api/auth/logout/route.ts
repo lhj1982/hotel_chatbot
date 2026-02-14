@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME || 'hotel_admin_access';
 
 export async function POST() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   cookieStore.set(AUTH_COOKIE_NAME, '', {
     httpOnly: true,
     sameSite: 'lax',
