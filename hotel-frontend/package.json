@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 3000",
-    "build": "npm run build:widget && npm run build:standalone",
+    "build": "npm run build:widget && npm run build:standalone && cp -r dist-standalone/* dist/",
     "build:widget": "vite build",
     "build:standalone": "vite build --config vite.config.standalone.ts",
     "preview": "vite preview --port 3000",

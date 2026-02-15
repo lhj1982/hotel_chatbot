@@ -49,7 +49,7 @@ export async function POST(req: Request) {
   }
 
   // Store in httpOnly cookie
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   cookieStore.set(AUTH_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
