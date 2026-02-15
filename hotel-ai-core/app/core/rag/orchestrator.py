@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import uuid
 
 from openai import AsyncOpenAI
@@ -10,6 +11,17 @@ from app.core.guardrails.prompt import build_system_prompt
 from app.core.rag.embeddings import embed_text
 from app.core.rag.retrieval import search_similar_chunks
 
+# Greeting patterns (English + Swedish)
+_GREETING_RE = re.compile(
+    r"^\s*(hi|hello|hey|hej|hejsan|hallå|god\s*(morgon|dag|kväll)"
+    r"|good\s*(morning|afternoon|evening)|howdy|tjena|tja)\s*[!?.]*\s*$",
+    re.IGNORECASE,
+)
+
+
+def _is_greeting(message: str) -> bool:
+    return bool(_GREETING_RE.match(message.strip()))
+
 
 async def rag_answer(
     db: AsyncSession,
@@ -17,8 +29,20 @@ async def rag_answer(
     user_message: str,
     escalation_phone: str | None = None,
     escalation_email: str | None = None,
+    greeting_message: str | None = None,
 ) -> dict:
     """Full RAG pipeline: embed → retrieve → prompt → respond."""
+    # 0. Handle greetings without RAG search
+    if _is_greeting(user_message):
+        default = "Hello! Welcome — I'm your hotel assistant. How can I help you today?"
+        return {
+            "outcome": "answered",
+            "answer_text": greeting_message or default,
+            "citations": [],
+            "confidence": 1.0,
+            "escalation": None,
+        }
+
     # 1. Embed the user query
     query_embedding = await embed_text(user_message)
 

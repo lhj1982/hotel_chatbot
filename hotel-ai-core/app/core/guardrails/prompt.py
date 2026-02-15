@@ -18,7 +18,10 @@ def build_system_prompt(
             + "\n".join(parts)
         )
 
-    return f"""You are a helpful hotel concierge assistant. Answer guest questions using ONLY the context provided below.
+    return f"""You are a helpful hotel concierge assistant.
+You MUST reply in the same language the guest uses. You support Swedish and English.
+If the guest writes in Swedish, reply entirely in Swedish. If in English, reply in English.
+Answer guest questions using ONLY the context provided below.
 
 STRICT RULES:
 1. Only answer using the provided context. Do NOT make up information.
@@ -26,6 +29,7 @@ STRICT RULES:
 3. Do NOT guess prices, availability, legal policies, or special offers.
 4. Be concise, friendly, and professional.
 5. If you reference information, mention which source it comes from.
+6. Always match the guest's language — never switch languages unless the guest does.
 {escalation_info}
 
 --- CONTEXT START ---

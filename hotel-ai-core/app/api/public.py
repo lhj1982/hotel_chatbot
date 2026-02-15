@@ -151,12 +151,14 @@ async def chat(
     ts = await get_tenant_settings(db, tenant_id)
     escalation_phone = ts.escalation_phone if ts else None
     escalation_email = ts.escalation_email if ts else None
+    greeting_message = ts.greeting_message if ts else None
 
     # RAG pipeline
     rag_result = await rag_answer(
         db, tenant_id, body.message,
         escalation_phone=escalation_phone,
         escalation_email=escalation_email,
+        greeting_message=greeting_message,
     )
 
     # Save assistant message
